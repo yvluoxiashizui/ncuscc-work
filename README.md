@@ -8,7 +8,9 @@
 .
 ├── README.md                    仓库总说明
 └── src/
-    └── reading-stats/           题目一：读数统计
+    ├── reading-stats/           题目一：读数统计
+    │   └── main.c               C11 实现
+    └── device-inspection/       题目二：设备巡检记录
         └── main.c               C11 实现
 ```
 
@@ -85,3 +87,71 @@ printf '10\n1000 -1000 0 999 -999 1 0 -1 500 -500\n' | ./main
 | `4 / -5 -2 -9 -1` | 全负数，`max` 不被 0 卡住 | 通过 |
 | `5 / 4 4 4 4 4` | 全部相同 | 通过 |
 | `n = 10000` | 规模上界 | 通过 |
+
+## 题目二：设备巡检记录
+
+### 题目描述
+
+**输入**
+
+- 第一行：记录数 `n`（`1 <= n <= 1000`）。
+- 随后 `n` 行，每行三个字段，用单个空格分隔：`<type> <status> <hours>`
+  - `type` 取值：`printer`、`scanner`、`router`、`server`
+  - `status` 取值：`ok`、`repair`
+  - `hours`：整数，`0 <= hours <= 100000`
+
+**输出**
+
+按固定顺序输出四行，每行是「类型、记录数、总小时数」：
+
+```text
+printer <count> <totalHours>
+scanner <count> <totalHours>
+router  <count> <totalHours>
+server  <count> <totalHours>
+```
+
+即使某类没有记录也必须输出，计数和总小时数为 0。最后一行输出总小时数最大的类型：
+
+```text
+busiest <type>
+```
+
+若多个类型总小时数相同，取固定顺序中最靠前的类型。退出码必须为 0。
+
+### 构建与运行
+
+```bash
+gcc -std=c11 -Wall -Wextra -o main src/device-inspection/main.c
+./main
+```
+
+### 实现要点
+
+- **按下标聚合**：用长度为 4 的 `count[]` 与 `hours[]`，下标顺序与固定输出顺序一致（`printer`、`scanner`、`router`、`server`），读入时把类型名映射成下标。
+- **类型名整串比较**：用 `strcmp` 完整比对，不能只比较首字符（`scanner` 与 `server` 首字母相同）。
+- **零记录类型照常输出**：四行由数组循环生成，而不是只输出出现过的类型。
+- **并列取靠前**：从下标 0 向 3 扫描，判断条件用严格大于 `>`，相等时不替换，于是并列时保留顺序更靠前的类型。
+- **字符串读取限定宽度**：`scanf("%15s %15s %d", ...)`，缓冲区为 `char type[16]`；`%s` 本身不检查长度，不限定宽度在输入超长时会写越界。
+
+### 验证
+
+```bash
+printf '6\nprinter ok 12\nscanner repair 30\nrouter ok 45\nprinter repair 8\nserver ok 100\nrouter repair 15\n' | ./main
+# printer 2 20 / scanner 1 30 / router 2 60 / server 1 100 / busiest server
+
+printf '3\nscanner ok 0\nprinter repair 5\nserver ok 5\n' | ./main
+# printer 1 5 / scanner 1 0 / router 0 0 / server 1 5 / busiest printer
+
+printf '2\nrouter repair 5\nrouter repair 7\n' | ./main
+# printer 0 0 / scanner 0 0 / router 2 12 / server 0 0 / busiest router
+```
+
+| 用例 | 覆盖点 | 结果 |
+| --- | --- | --- |
+| 样例 1 | 多类型混合、按类型累加 | 通过 |
+| 样例 2 | `printer` 与 `server` 总小时数并列，取靠前者 | 通过 |
+| 样例 3 | 只有一种类型，其余输出 0 0 | 通过 |
+| `1 / printer ok 0` | 四类均为 0，并列取第一个 | 通过 |
+| `1 / server ok 100000` | 单条记录取到小时数上界 | 通过 |
+| `n = 1000` 全部 `server ok 100000` | 计数与总小时数上界（100000000） | 通过 |
