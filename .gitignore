@@ -2,3 +2,6 @@
 main
 *.o
 *.exe
+
+# CMake 构建目录
+build/

@@ -1,6 +1,6 @@
 # ncuscc-work
 
-考核实践仓库。各阶段任务的源码按题目分目录存放在 `src/` 下，每个目录自成一个可独立编译运行的程序。
+考核实践仓库。各阶段任务的源码按题目分目录存放在 `src/` 下，每个目录自成一个可独立构建运行的程序。
 
 ## 目录结构
 
@@ -9,12 +9,19 @@
 ├── README.md                    仓库总说明
 └── src/
     ├── reading-stats/           题目一：读数统计
-    │   └── main.c               C11 实现
+    │   └── main.c
     ├── device-inspection/       题目二：设备巡检记录
-    │   └── main.c               C11 实现
-    └── reading-window/          题目三：固定容量读数窗口
-        └── main.c               C11 实现
+    │   └── main.c
+    ├── reading-window/          题目三：固定容量读数窗口
+    │   └── main.c
+    └── multifile-stats/         题目四：多文件统计工具
+        ├── CMakeLists.txt
+        ├── main.c
+        ├── stats.h / stats.c
+        └── format.h / format.c
 ```
+
+前三个题目是单文件程序，用 `gcc` 直接编译；题目四是多文件工程，用 CMake 构建（可执行目标名固定为 `main`，产物路径 `build/main`）。
 
 ## 环境与工具链
 
@@ -222,3 +229,77 @@ printf '8\n8 7 6 5 4 3 2 1\n' | ./main
 | `n = 100000` 末 8 个为 `1..8` | 规模上界与窗口顺序 | 通过 |
 | 末尾 8 个全为 `-1000` | 负值、求和下界 `-8000` | 通过 |
 | AddressSanitizer / UndefinedBehaviorSanitizer 复跑上述用例 | 无越界写、无未定义行为 | 通过 |
+
+## 题目四：多文件统计工具
+
+### 题目描述
+
+**输入**
+
+- 第一行：整数 `n`（`1 <= n <= 10000`）。
+- 第二行：`n` 个整数，每个在 `[-1000000000, 1000000000]`。
+
+**输出**
+
+恰好四行：
+
+```text
+count=<n>
+sum=<所有整数之和>
+min=<最小值>
+max=<最大值>
+```
+
+退出码必须为 0。`sum` 可能超过 32 位整数范围，必须使用 64 位整数。
+
+### 工程结构
+
+```text
+src/multifile-stats/
+├── CMakeLists.txt        构建入口，可执行目标名 main
+├── main.c                入口：调用统计与格式化
+├── stats.h / stats.c     统计：读入并计算 count / total / smallest / largest
+└── format.h / format.c   格式化：按 count / sum / min / max 输出四行
+```
+
+### 构建与运行
+
+```bash
+cd src/multifile-stats
+cmake -S . -B build
+cmake --build build
+./build/main
+```
+
+### 实现要点
+
+- **构建入口列出全部实现文件**：`add_executable(main main.c stats.c format.c)` 漏掉实现文件会在链接阶段报 `undefined reference`。
+- **声明与定义保持一致**：`print_report` 在 `format.h` 中声明为 `(long long count, long long total, long long smallest, long long largest)`，`format.c` 的定义必须逐字相同。C 会在同一源文件内检查声明与定义的类型冲突；C++ 会把不同参数类型视为重载，随后因该签名没有定义而链接失败。
+- **64 位求和**：读数绝对值可到 `1000000000`，`n` 可到 `10000`，总和最大 `1e13`，超出 32 位 `int` 范围，因此统计量统一使用 `long long`：输入用 `%lld` 读取，输出用 `%lld` 打印。
+- **极值从第一个读数初始化**：`smallest` / `largest` 不用 0 作初值。
+- **标准版本显式声明**：`CMakeLists.txt` 中设置 `CMAKE_C_STANDARD 11` 与 `CMAKE_C_STANDARD_REQUIRED ON`。
+
+### 验证
+
+```bash
+cd src/multifile-stats
+cmake -S . -B build && cmake --build build
+
+printf '3\n1000000000 -1000000000 1\n' | ./build/main
+# count=3 sum=1 min=-1000000000 max=1000000000
+
+printf '5\n1000000000 1000000000 1000000000 1000000000 1000000000\n' | ./build/main
+# count=5 sum=5000000000 min=1000000000 max=1000000000   （sum 超过 32 位）
+
+printf '1\n0\n' | ./build/main
+# count=1 sum=0 min=0 max=0
+```
+
+| 用例 | 覆盖点 | 结果 |
+| --- | --- | --- |
+| 样例 1 | 正负混合、取值上下界 | 通过 |
+| 样例 2 | `sum = 5000000000` 超出 32 位 | 通过 |
+| 样例 3 | `n = 1`，读数为 0 | 通过 |
+| `n = 1 / -1000000000` | 取值下界 | 通过 |
+| `n = 2 / 1000000000 -1000000000` | 求和为 0 | 通过 |
+| `n = 10000` 全为 `1000000000` | 求和上界 `10000000000000` | 通过 |
