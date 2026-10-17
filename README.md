@@ -280,7 +280,7 @@ cmake --build build
 - **声明与定义保持一致**：`print_report` 在 `format.h` 中声明为 `(long long count, long long total, long long smallest, long long largest)`，`format.c` 的定义必须逐字相同。C 会在同一源文件内检查声明与定义的类型冲突；C++ 会把不同参数类型视为重载，随后因该签名没有定义而链接失败。
 - **64 位求和**：读数绝对值可到 `1000000000`，`n` 可到 `10000`，总和最大 `1e13`，超出 32 位 `int` 范围，因此统计量统一使用 `long long`：输入用 `%lld` 读取，输出用 `%lld` 打印。
 - **极值从第一个读数初始化**：`smallest` / `largest` 不用 0 作初值。
-- **标准版本显式声明**：`CMakeLists.txt` 中设置 `CMAKE_C_STANDARD 11` 与 `CMAKE_C_STANDARD_REQUIRED ON`。
+- **标准版本显式声明**：`CMakeLists.txt` 中设置 `CMAKE_C_STANDARD 11`、`CMAKE_C_STANDARD_REQUIRED ON` 与 `CMAKE_C_EXTENSIONS OFF`，编译器实际收到的是 `-std=c11`（而不是默认的 `-std=gnu11`），与判题命令一致。
 
 ### 验证
 
