@@ -1,7 +1,6 @@
 #include "format.h"
 #include "stats.h"
 
-/* 入口：读入并统计，然后按契约输出报表 */
 int main(void) {
     Stats stats;
 

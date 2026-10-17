@@ -14,8 +14,7 @@ int stats_read(Stats *out) {
         return 1;
     }
 
-    /* 第一个读数同时作为 total、smallest、largest 的初值：
-     * 极值不能用 0 初始化，0 未必出现在输入里。 */
+    /* 第一个读数作为 total/smallest/largest 的初值（极值不能用 0） */
     if (scanf("%lld", &value) != 1) {
         return 1;
     }

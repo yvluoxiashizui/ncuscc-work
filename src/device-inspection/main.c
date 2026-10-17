@@ -1,18 +1,15 @@
 #include <stdio.h>
 #include <string.h>
 
-/* 设备巡检记录（C11）
- * 读入 n 条记录（类型 状态 小时数），按固定顺序输出每类的记录数与总小时数，
- * 最后输出总小时数最大的类型。
- */
+/* 设备巡检记录：按固定顺序汇总每类记录数与小时数，并输出最忙的类型 */
 
 int main(void) {
-    /* 下标与题面要求的固定输出顺序一致 */
+    /* 下标与输出顺序一致 */
     const char *names[4] = {"printer", "scanner", "router", "server"};
     int count[4] = {0, 0, 0, 0};
     int hours[4] = {0, 0, 0, 0};
 
-    char type[16];     /* 最长的类型名 "printer" / "scanner" 为 7 个字符 */
+    char type[16];     /* 最长类型名 7 个字符 */
     char status[16];
     int value = 0;
     int n = 0;
@@ -25,7 +22,7 @@ int main(void) {
     }
 
     for (i = 0; i < n; i++) {
-        /* 限定字符串宽度，避免输入超长时写越界 */
+        /* 限定宽度，避免输入超长时写越界 */
         if (scanf("%15s %15s %d", type, status, &value) != 3) {
             return 1;
         }
@@ -47,8 +44,7 @@ int main(void) {
         printf("%s %d %d\n", names[i], count[i], hours[i]);
     }
 
-    /* 用严格大于比较：并列时保留固定顺序中更靠前的类型 */
-    best = 0;
+    /* 严格大于：并列时保留靠前的类型 */
     for (i = 1; i < 4; i++) {
         if (hours[i] > hours[best]) {
             best = i;

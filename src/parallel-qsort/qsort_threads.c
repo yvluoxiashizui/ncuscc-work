@@ -6,11 +6,7 @@
 #include <string.h>
 #include <time.h>
 
-/* 四线程快速排序：pthread 实现
- * - 工作线程总数上限 MAX_WORKERS（创建前先用互斥锁抢名额）
- * - 区间长度 <= CUTOFF 时停止拆分，改用串行插入排序
- * - 每个创建者在自己返回前 join 自己创建的那个线程，主线程退出前全部汇合
- */
+/* 四线程快速排序：工作线程上限 4，区间长度 <= CUTOFF 时转插入排序 */
 
 #define MAX_WORKERS 4
 #define CUTOFF 4
@@ -22,7 +18,7 @@ typedef struct {
 } Task;
 
 static pthread_mutex_t slot_lock = PTHREAD_MUTEX_INITIALIZER;
-static int slots_used = 0;   /* 已创建的工作线程数，上限 MAX_WORKERS */
+static int slots_used = 0;   /* 已创建工作线程数 */
 
 /* 题面给出的 16 个数 */
 static const int DATA[16] = {42, 7, 19, 42, 3, 88, 15, 7, 61, 0, 54, 23, 91, 15, 36, 100};
@@ -100,7 +96,7 @@ static void sort_range(int *a, int lo, int hi) {
 
     p = partition(a, lo, hi);
 
-    /* 较大的一侧考虑交给新线程，另一侧留在当前线程，避免两边都开线程 */
+    /* 较大一侧交给新线程，另一侧留在当前线程 */
     if ((p - lo) >= (hi - p)) {
         plo = lo;
         phi = p - 1;
@@ -121,15 +117,15 @@ static void sort_range(int *a, int lo, int hi) {
             t->lo = plo;
             t->hi = phi;
             if (pthread_create(&tid, NULL, worker_main, t) == 0) {
-                sort_range(a, slo, shi);   /* 当前线程处理另一侧 */
-                pthread_join(tid, NULL);   /* 汇合：等这一侧排完再返回 */
+                sort_range(a, slo, shi);   /* 当前线程做另一侧 */
+                pthread_join(tid, NULL);   /* 汇合 */
                 return;
             }
             free(t);
         }
     }
 
-    /* 名额用尽或区间太小：两侧都串行处理 */
+    /* 名额用尽或区间太小：串行处理两侧 */
     sort_range(a, slo, shi);
     sort_range(a, plo, phi);
 }
