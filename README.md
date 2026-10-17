@@ -348,3 +348,7 @@ gcc -std=c11 -Wall -Wextra -pthread -o qs src/parallel-qsort/qsort_threads.c
 ### 报告结构
 
 `report.md` 按题面要求分四节：线程、划分与汇合、正确性、环境限制。环境一节写明实验发生在单 CPU 沙盒中，耗时只作观察记录，不作为并行加速成绩。
+
+## 关于 AI 参与
+
+本仓库的代码与文档在 AI 辅助下完成，所用模型为 DeepSeek 的 `deepseek-flash`（通过 DeepSeek Harness 运行）。所有结论都用本地编译与测试复核过：各题的编译命令、样例逐字节比对、退出码检查与边界用例结果见对应小节。
