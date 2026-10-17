@@ -14,6 +14,7 @@
 .
 ├── README.md                    仓库总说明
 ├── REPORT.md                    技术报告（流程、语法、文件组织、命令行记录）
+├── figures/                     报告插图（5 张 PNG）
 └── src/
     ├── reading-stats/           题目一：读数统计
     │   └── main.c
