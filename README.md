@@ -231,7 +231,7 @@ printf '8\n8 7 6 5 4 3 2 1\n' | ./main
 | `n = 16` | 绕回两轮 | 通过 |
 | `n = 100000` 末 8 个为 `1..8` | 规模上界与窗口顺序 | 通过 |
 | 末尾 8 个全为 `-1000` | 负值、求和下界 `-8000` | 通过 |
-| AddressSanitizer / UndefinedBehaviorSanitizer 复跑上述用例 | 无越界写、无未定义行为 | 通过 |
+| AddressSanitizer / UndefinedBehaviorSanitizer（样例 2 与 n=100000） | 无越界写、无未定义行为 | 通过 |
 
 ## 题目四：多文件统计工具
 
